@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFleet AI | Abhirami Ajith - Telemetry Command</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #04060d;
+            --surface-card: #0a0d1a;
+            --border-color: rgba(255, 255, 255, 0.07);
+            --text-muted: #8492a6;
+            --accent-blue: #0088ff;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: #f1f5f9;
+            font-family: var(--font-main);
+            overflow-x: hidden;
+        }
+
+        /* Core Panel Geometry */
+        .grid-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 10px 25px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metric-val {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+            font-family: var(--font-mono);
+            transition: color 0.3s ease;
+        }
+
+        .unit {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            font-family: var(--font-main);
+        }
+
+        /* Hardware Asset Attributes List */
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.85rem;
+        }
+        .spec-item:last-child { border-bottom: none; }
+        .spec-label { color: var(--text-muted); font-weight: 500; }
+        .spec-value { font-weight: 600; color: #e2e8f0; font-family: var(--font-mono); }
+
+        /* --- INNOVATION RULEBASE MATRIX BLOCK --- */
+        .brain-highlight {
+            border: 2px solid #0088ff;
+            background: linear-gradient(135deg, rgba(10, 13, 26, 0.95) 0%, rgba(15, 22, 43, 0.95) 100%);
+            box-shadow: 0 0 30px rgba(0, 136, 255, 0.15);
+            position: relative;
+        }
+        
+        .brain-badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: #0088ff;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.7rem;
+            padding: 3px 12px;
+            border-radius: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0, 136, 255, 0.4);
+        }
+
+        .logic-step {
+            background: rgba(0,0,0,0.4);
+            border-left: 3px solid #0088ff;
+            padding: 10px 12px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            border-radius: 0 6px 6px 0;
+        }
+
+        /* --- BALANCED EMERGENCY BEACON CONTAINER --- */
+        .status-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 1.5rem;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .beacon-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 90px;
+        }
+
+        .warning-beacon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #0b0f19;
+            border: 2px solid #1e293b;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #334155; 
+            transition: all 0.3s ease;
+            margin: 0 auto;
+        }
+
+        /* Active System Overload Visualizations */
+        .panel-critical {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .beacon-critical {
+            background: #ff0000 !important;
+            border-color: #ff9999 !important;
+            color: #ffffff !important; 
+            box-shadow: 0 0 25px #ff0000, 0 0 45px #ff0000, inset 0 0 12px #ffffff !important;
+            animation: beacon-strobe 0.4s infinite alternate;
+        }
+
+        @keyframes beacon-strobe {
+            0% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.6; transform: scale(0.95); }
+        }
+
+        /* GIS Viewport Geometry */
+        #map {
+            height: 480px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .console-logs {
+            height: 200px;
+            overflow-y: auto;
+            background: #010205;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .console-logs div {
+            padding: 4px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.03);
+            color: #cbd5e1;
+        }
+
+        .console-logs::-webkit-scrollbar { width: 5px; }
+        .console-logs::-webkit-scrollbar-track { background: #010205; }
+        .console-logs::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <header class="py-3 mb-4 border-bottom border-secondary border-opacity-10 sticky-top" style="background: rgba(4, 6, 13, 0.85); backdrop-filter: blur(12px);">
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="fw-bold fs-5 d-flex align-items-center gap-2">
+                    <i class="bi bi-cpu-fill text-primary"></i>
+                    <span class="text-light">SmartFleet AI: <span class="text-primary">Thermal Defense</span></span>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-primary bg-opacity-20 text-light border border-primary border-opacity-50 px-3 py-2 fs-7 font-mono">
+                    <i class="bi bi-person-badge me-1"></i> Scholar: Abhirami Ajith (BCA)
+                </span>
+                <div class="d-none d-sm-flex align-items-center gap-2 border-start border-secondary border-opacity-25 ps-3">
+                    <span id="connIndicator" class="spinner-grow spinner-grow-sm text-success" style="width: 8px; height: 8px;"></span>
+                    <span class="fs-7 text-success fw-medium font-mono">MQTT Secure Link</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container-fluid px-4 pb-5">
+        
+        <div class="row g-4 mb-4">
+            
+            <div class="col-xl-4 col-lg-5">
+                <div class="grid-card h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="section-title"><i class="bi bi-ev-front text-primary"></i> Target Hardware Asset</div>
+                        
+                        <div class="p-3 rounded mb-3 border border-secondary border-opacity-25 text-center" style="background: rgba(255, 255, 255, 0.02);">
+                            <div class="fs-8 text-primary fw-bold text-uppercase" style="letter-spacing: 1px;">Royal Enfield Core</div>
+                            <div class="fs-2 fw-bold text-light font-mono mt-1">METEOR 350</div>
+                            <div class="badge bg-dark border border-secondary border-opacity-25 text-info font-mono mt-2 px-3 py-1 fs-7">
+                                ID: KL-01-AJ-2000
+                            </div>
+                        </div>
+
+                        <div class="spec-item"><span class="spec-label">Chassis VIN</span><span class="spec-value text-muted font-mono">ME3U3S5F3N21094</span></div>
+                        <div class="spec-item"><span class="spec-label">Displacement</span><span class="spec-value text-info">349cc J-Series Core</span></div>
+                        <div class="spec-item"><span class="spec-label">Cooling Draft</span><span class="spec-value text-light">Air-Oil Draft Core</span></div>
+                        <div class="spec-item"><span class="spec-label">Logic Engine</span><span class="spec-value text-primary">Fuzzy Engine v2.4</span></div>
+                        <div class="spec-item"><span class="spec-label">Safety Target</span><span class="spec-value text-warning">Anti-Burn Activated</span></div>
+                    </div>
+                    
+                    <div class="mt-3 pt-2 border-top border-secondary border-opacity-10 text-center text-muted fs-8">
+                        Predictive IoT Asset Health Monitoring Node
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-8 col-lg-7 d-flex flex-column gap-4">
+                
+                <div class="row g-4">
+                    
+                    <div class="col-md-6">
+                        <div class="grid-card h-100 text-center">
+                            <div class="section-title justify-content-center">Real-Time Core Heat</div>
+                            <div id="tempContainer" class="metric-val text-success mt-2">
+                                <span id="tempVal">--</span><span class="unit">°C</span>
+                            </div>
+                            <div class="progress mt-3 mx-auto" style="height: 4px; width: 85%; background: #161f33;">
+                                <div id="tempBar" class="progress-bar bg-success" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="grid-card h-100 text-center">
+                            <div class="section-title justify-content-center">Velocity Draft Vector</div>
+                            <div class="metric-val text-primary mt-2"><span id="speedVal">--</span><span class="unit"> km/h</span></div>
+                            <div class="fs-7 mt-2 fw-medium" id="airflowTag">Airflow Draft Context</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grid-card brain-highlight flex-fill d-flex flex-column justify-content-center">
+                    <span class="brain-badge">AI Fuzzy Rulebase</span>
+                    <div class="row align-items-center g-3">
+                        
+                        <div class="col-md-7">
+                            <div class="section-title mb-1" style="color: #0088ff;">
+                                <i class="bi bi-diagram-3"></i> Real-Time Fuzzy Inference Logic
+                            </div>
+                            <div class="text-light fs-7">Evaluating combinatorial multi-sensor risk matrices:</div>
+                            <div class="logic-step font-mono text-light" id="logicRuleText">
+                                Synchronizing payload interfaces...
+                            </div>
+                        </div>
+
+                        <div class="col-md-5">
+                            <div id="statusPanelOuter" class="status-panel">
+                                <div>
+                                    <div class="fs-8 text-muted fw-bold">SAFETY INFERENCE</div>
+                                    <div id="statusText" class="fs-4 fw-bold text-success font-mono">STABLE</div>
+                                    <div class="fs-7 text-muted mt-1">Hazard Index: <strong id="riskVal" class="text-light">0%</strong></div>
+                                </div>
+                                <div class="beacon-wrapper">
+                                    <div id="emergencyBeacon" class="warning-beacon">
+                                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                                    </div>
+                                    <span class="fs-8 text-muted d-block mt-2 fw-bold text-center">WARNING LIGHT</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="grid-card">
+                    <div class="section-title justify-content-between">
+                        <span><i class="bi bi-geo-alt-fill text-danger"></i> Live AC Road Tracking GIS Spatial Interface</span>
+                        <span id="coordTag" class="text-muted font-mono text-lowercase" style="font-size: 0.75rem;">Vector Base Lock: Pending</span>
+                    </div>
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="grid-card">
+                    <div class="section-title">
+                        <i class="bi bi-graph-up text-primary"></i> Thermal Surge Analytics Timeline
+                    </div>
+                    <div style="height: 350px;">
+                        <canvas id="chartMatrix"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="grid-card">
+                    <div class="section-title"><i class="bi bi-terminal-fill text-info"></i> Distributed Telemetry Stream Output</div>
+                    <div id="logStream" class="console-logs"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // 1. Initializing Leaflet Mapping base matrix framed around AC Road (Changanassery to Alappuzha Corridor)
+        const initialMapCenter = [9.4500, 76.4400]; // Anchored centrally along AC Highway corridor
+        const map = L.map('map').setView(initialMapCenter, 12); // Optimized scale displays complete cross-district highway path
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png', {
+            attribution: '&copy; Abhirami Core GIS Platform', maxZoom: 19
+        }).addTo(map);
+
+        const customMarker = L.divIcon({
+            className: 'custom-icon',
+            html: `<div style="background:#0088ff; width:16px; height:16px; border-radius:50%; border:3px solid #04060d; box-shadow: 0 0 15px #0088ff;"></div>`,
+            iconSize: [16, 16], iconAnchor: [8, 8]
+        });
+        const marker = L.marker([9.4450, 76.5400], {icon: customMarker}).addTo(map);
+
+        // 2. Establishing Chart.js context execution buffers
+        const ctx = document.getElementById('chartMatrix').getContext('2d');
+        const analyticsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [], borderColor: '#0088ff', borderWidth: 3, pointRadius: 4,
+                    pointBackgroundColor: '#0088ff', pointBorderColor: '#ffffff', tension: 0.3, fill: true,
+                    backgroundColor: 'rgba(0, 136, 255, 0.08)'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', font: { size: 10 } }, suggestedMin: 60, suggestedMax: 125 }
+                }
+            }
+        });
+
+        // 3. Broker MQTT Connection Management Pipeline
+        const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+        const TOPIC = "fleet/telemetry/pro";
+
+        client.on('connect', () => {
+            console.log("MQTT Gateway Socket Linked Securely");
+            client.subscribe(TOPIC);
+            document.getElementById('logStream').innerHTML = '<div class="text-muted text-center pt-5">Awaiting edge engine telemetric data streams from hardware node...</div>';
+        });
+
+        let clearTerminalBuffer = true;
+
+        client.on('message', (topic, payload) => {
+            try {
+                const packet = JSON.parse(payload.toString());
+                const exactTime = new Date().toLocaleTimeString();
+
+                if(clearTerminalBuffer) { document.getElementById('logStream').innerHTML = ''; clearTerminalBuffer = false; }
+
+                // Inject scalar values natively
+                document.getElementById('tempVal').innerText = packet.temp;
+                document.getElementById('speedVal').innerText = packet.speed;
+                document.getElementById('riskVal').innerText = `${packet.risk_score}%`;
+                document.getElementById('coordTag').innerText = `Vector Path Coordinate Lock: ${packet.lat}, ${packet.lon}`;
+
+                // Calculate UI linear meter bounds parameters dynamically
+                const pct = Math.min(Math.max(((packet.temp - 60) / (125 - 60)) * 100, 0), 100);
+                document.getElementById('tempBar').style.width = `${pct}%`;
+
+                // Update Velocity Airflow Context factors
+                const draftElem = document.getElementById('airflowTag');
+                if(packet.speed < 15) {
+                    draftElem.innerHTML = `<span class="text-warning">Stagnant Engine Airflow Velocity (Thermal Hazard)</span>`;
+                } else {
+                    draftElem.innerHTML = `<span class="text-success">Optimal Wind Velocity Dispersal Active</span>`;
+                }
+
+                // --- STATE INTERCEPTION ENGINE: TOGGLES BEACON & TARGETS DYNAMIC TEXT COLORING ---
+                const tempTextContainer = document.getElementById('tempContainer');
+                const tempBarElement = document.getElementById('tempBar');
+                const outerPanel = document.getElementById('statusPanelOuter');
+                const statusStr = document.getElementById('statusText');
+                const lightBeacon = document.getElementById('emergencyBeacon');
+                const logicExplanation = document.getElementById('logicRuleText');
+
+                if(packet.engine_status === "CRITICAL") {
+                    // Activate Critical Hazard Profiles & Instantly triggers Red styling matrix
+                    tempTextContainer.className = "metric-val text-danger mt-2"; // Forces explicit Red Text
+                    tempBarElement.className = "progress-bar bg-danger"; // Colors dynamic indicator element Red
+                    
+                    outerPanel.className = "status-panel panel-critical";
+                    statusStr.className = "fs-4 fw-bold text-danger font-mono";
+                    statusStr.innerText = "CRITICAL";
+                    lightBeacon.className = "warning-beacon beacon-critical"; 
+                    
+                    logicExplanation.innerHTML = `[HAZARD ASSERTED] <span class="text-danger fw-bold">Surge Core Temp</span> combined with <span class="text-warning fw-bold">Zero Airflow Draft</span> triggers maximal Anti-Burn hazard index score.`;
+                } else {
+                    // Re-assert Stable Cruising operating configurations using native Green styling paths
+                    tempTextContainer.className = "metric-val text-success mt-2"; // Restores absolute Green Text
+                    tempBarElement.className = "progress-bar bg-success"; // Restores Green status array Indicator
+                    
+                    outerPanel.className = "status-panel";
+                    statusStr.className = "fs-4 fw-bold text-success font-mono";
+                    statusStr.innerText = "STABLE";
+                    lightBeacon.className = "warning-beacon"; 
+                    
+                    logicExplanation.innerHTML = `Operating Parameters Normal. Cruising Velocity Draft vector clearing excessive internal core heat buildup.`;
+                }
+
+                // Synchronize dynamic ground map layers smoothly
+                if(packet.lat && packet.lon) {
+                    const actualCoords = [packet.lat, packet.lon];
+                    marker.setLatLng(actualCoords);
+                    map.panTo(actualCoords);
+                }
+
+                // Step graph matrix points cleanly
+                analyticsChart.data.labels.push(exactTime);
+                analyticsChart.data.datasets[0].data.push(packet.temp);
+                if(analyticsChart.data.labels.length > 12) {
+                    analyticsChart.data.labels.shift();
+                    analyticsChart.data.datasets[0].data.shift();
+                }
+                analyticsChart.update('none');
+
+                // Stream Terminal Event output array data logs
+                const logTarget = document.getElementById('logStream');
+                const badgeColor = packet.engine_status === "CRITICAL" ? 'color:#ff0000;font-weight:bold;' : 'color:#00ff88;';
+                const logLine = `<div><span style="color:#64748b">[${exactTime}]</span> [TELEMETRY INGESTION] T: ${packet.temp}°C | Speed: ${packet.speed} km/h | Target Lock: <span style="${badgeColor}">${packet.engine_status}</span></div>`;
+                logTarget.innerHTML = logLine + logTarget.innerHTML;
+
+            } catch(e) { console.error("Telemetry extraction parsing fault:", e); }
+        });
+
+        client.on('error', () => { document.getElementById('coordTag').innerText = "Gateway Connection Interrupt"; });
+    </script>
+</body>
+</html>
