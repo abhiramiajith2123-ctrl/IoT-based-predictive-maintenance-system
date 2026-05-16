@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartFleet AI | Abhirami Ajith - Telemetry Command</title>
+    <title>SmartFleet AI | Edge Command Center</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -15,472 +15,433 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        :root {
-            --bg-base: #04060d;
-            --surface-card: #0a0d1a;
-            --border-color: rgba(255, 255, 255, 0.07);
-            --text-muted: #8492a6;
-            --accent-blue: #0088ff;
-            --font-main: 'Inter', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
+        :root { --bg-base: #04060d; --surface-card: #0a1020; --border-color: rgba(255, 255, 255, 0.08); --text-muted: #94a3b8; --accent-blue: #0088ff; --font-main: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace; }
+        body { background-color: var(--bg-base); color: #f1f5f9; font-family: var(--font-main); margin: 0; overflow-x: hidden; }
 
-        body {
-            background-color: var(--bg-base);
-            color: #f1f5f9;
-            font-family: var(--font-main);
-            overflow-x: hidden;
-        }
-
-        /* Core Panel Geometry */
-        .grid-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.25rem;
-            box-shadow: 0 10px 25px 0 rgba(0, 0, 0, 0.5);
-        }
-
-        .section-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .metric-val {
-            font-size: 2.5rem;
-            font-weight: 700;
-            line-height: 1;
-            font-family: var(--font-mono);
-            transition: color 0.3s ease;
-        }
-
-        .unit {
-            font-size: 0.9rem;
-            font-weight: 400;
-            color: var(--text-muted);
-            font-family: var(--font-main);
-        }
-
-        /* Hardware Asset Attributes List */
-        .spec-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.6rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-            font-size: 0.85rem;
-        }
-        .spec-item:last-child { border-bottom: none; }
-        .spec-label { color: var(--text-muted); font-weight: 500; }
-        .spec-value { font-weight: 600; color: #e2e8f0; font-family: var(--font-mono); }
-
-        /* --- INNOVATION RULEBASE MATRIX BLOCK --- */
-        .brain-highlight {
-            border: 2px solid #0088ff;
-            background: linear-gradient(135deg, rgba(10, 13, 26, 0.95) 0%, rgba(15, 22, 43, 0.95) 100%);
-            box-shadow: 0 0 30px rgba(0, 136, 255, 0.15);
-            position: relative;
-        }
+        #authView { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: linear-gradient(rgba(4, 6, 13, 0.75), rgba(4, 6, 13, 0.95)), url('https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&q=80&w=1920') center/cover no-repeat; }
+        .auth-card { width: 100%; max-width: 420px; background: rgba(10, 16, 32, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 25px 50px rgba(0,0,0,0.8); text-align: center; }
+        .auth-card .logo-icon { font-size: 3.5rem; color: var(--accent-blue); margin-bottom: 0.5rem; filter: drop-shadow(0 0 10px rgba(0, 136, 255, 0.5)); }
+        .smart-nav { background: rgba(4, 6, 13, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid var(--border-color); z-index: 1050; }
+        .nav-link-custom { color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; padding: 0.5rem 1rem; border-radius: 8px; }
+        .nav-link-custom:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .vehicle-card { background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        .vehicle-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); box-shadow: 0 15px 30px rgba(0, 136, 255, 0.15); transition: 0.3s ease; }
+        .card-img-wrapper { height: 160px; background: #000; position: relative; border-bottom: 1px solid var(--border-color); }
+        .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; cursor: pointer; }
+        .form-control, .form-select { background: #05070f !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px; padding: 0.75rem 1rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--accent-blue) !important; box-shadow: 0 0 10px rgba(0,136,255,0.2); }
+        .btn-primary-custom { background: var(--accent-blue); color: white; font-weight: 600; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; }
+        .view-section { display: none; } .view-active { display: block !important; }
         
-        .brain-badge {
-            position: absolute;
-            top: -12px;
-            right: 20px;
-            background: #0088ff;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 0.7rem;
-            padding: 3px 12px;
-            border-radius: 12px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0, 136, 255, 0.4);
-        }
+        .grid-card { background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; }
+        .metric-val { font-size: 2.2rem; font-weight: 700; font-family: var(--font-mono); }
+        .unit { font-size: 0.9rem; color: var(--text-muted); font-family: var(--font-main); }
+        .warning-beacon { width: 48px; height: 48px; border-radius: 50%; background: #0b0f19; border: 2px solid #1e293b; display: flex; align-items: center; justify-content: center; color: #334155; margin: 0 auto; }
+        .beacon-critical { background: #ff0000 !important; color: #ffffff !important; box-shadow: 0 0 25px #ff0000; animation: beacon-strobe 0.4s infinite alternate; }
+        @keyframes beacon-strobe { 0% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.6; transform: scale(0.95); } }
+        #map { height: 350px; border-radius: 8px; border: 1px solid var(--border-color); }
 
-        .logic-step {
-            background: rgba(0,0,0,0.4);
-            border-left: 3px solid #0088ff;
-            padding: 10px 12px;
-            margin-top: 8px;
-            font-size: 0.85rem;
-            border-radius: 0 6px 6px 0;
-        }
-
-        /* --- BALANCED EMERGENCY BEACON CONTAINER --- */
-        .status-panel {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.2rem 1.5rem;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-
-        .beacon-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-width: 90px;
-        }
-
-        .warning-beacon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: #0b0f19;
-            border: 2px solid #1e293b;
-            box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #334155; 
-            transition: all 0.3s ease;
-            margin: 0 auto;
-        }
-
-        /* Active System Overload Visualizations */
-        .panel-critical {
-            background: rgba(239, 68, 68, 0.08);
-            border-color: rgba(239, 68, 68, 0.4);
-        }
-
-        .beacon-critical {
-            background: #ff0000 !important;
-            border-color: #ff9999 !important;
-            color: #ffffff !important; 
-            box-shadow: 0 0 25px #ff0000, 0 0 45px #ff0000, inset 0 0 12px #ffffff !important;
-            animation: beacon-strobe 0.4s infinite alternate;
-        }
-
-        @keyframes beacon-strobe {
-            0% { opacity: 1; transform: scale(1.05); }
-            100% { opacity: 0.6; transform: scale(0.95); }
-        }
-
-        /* GIS Viewport Geometry */
-        #map {
-            height: 480px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .console-logs {
-            height: 200px;
-            overflow-y: auto;
-            background: #010205;
-            border-radius: 8px;
-            padding: 12px;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .console-logs div {
-            padding: 4px 0;
-            border-bottom: 1px dashed rgba(255,255,255,0.03);
-            color: #cbd5e1;
-        }
-
-        .console-logs::-webkit-scrollbar { width: 5px; }
-        .console-logs::-webkit-scrollbar-track { background: #010205; }
-        .console-logs::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        .sec-metric { background: #05070f; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; text-align: center; }
+        .sec-metric-val { font-family: var(--font-mono); font-size: 1.2rem; font-weight: bold; color: #e2e8f0; }
+        .sec-metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
     </style>
 </head>
 <body>
 
-    <header class="py-3 mb-4 border-bottom border-secondary border-opacity-10 sticky-top" style="background: rgba(4, 6, 13, 0.85); backdrop-filter: blur(12px);">
-        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-3">
-                <div class="fw-bold fs-5 d-flex align-items-center gap-2">
-                    <i class="bi bi-cpu-fill text-primary"></i>
-                    <span class="text-light">SmartFleet AI: <span class="text-primary">Thermal Defense</span></span>
-                </div>
-            </div>
-            
-            <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-primary bg-opacity-20 text-light border border-primary border-opacity-50 px-3 py-2 fs-7 font-mono">
-                    <i class="bi bi-person-badge me-1"></i> Scholar: Abhirami Ajith (BCA)
-                </span>
-                <div class="d-none d-sm-flex align-items-center gap-2 border-start border-secondary border-opacity-25 ps-3">
-                    <span id="connIndicator" class="spinner-grow spinner-grow-sm text-success" style="width: 8px; height: 8px;"></span>
-                    <span class="fs-7 text-success fw-medium font-mono">MQTT Secure Link</span>
-                </div>
-            </div>
+    <div id="authView">
+        <div class="auth-card">
+            <i class="bi bi-shield-lock-fill logo-icon"></i>
+            <h2 class="fw-bold text-light mb-1">Login</h2>
+            <p class="text-muted mb-4 fs-7">Secure Edge Gateway</p>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-3"><input type="text" id="username" class="form-control" placeholder="Username" required></div>
+                <div class="mb-4"><input type="password" id="password" class="form-control" placeholder="Password" required></div>
+                <button type="submit" class="btn btn-primary-custom w-100 py-2 rounded-3">Establish Secure Session</button>
+            </form>
         </div>
-    </header>
+    </div>
 
-    <main class="container-fluid px-4 pb-5">
-        
-        <div class="row g-4 mb-4">
-            
-            <div class="col-xl-4 col-lg-5">
-                <div class="grid-card h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="section-title"><i class="bi bi-ev-front text-primary"></i> Target Hardware Asset</div>
-                        
-                        <div class="p-3 rounded mb-3 border border-secondary border-opacity-25 text-center" style="background: rgba(255, 255, 255, 0.02);">
-                            <div class="fs-8 text-primary fw-bold text-uppercase" style="letter-spacing: 1px;">Royal Enfield Core</div>
-                            <div class="fs-2 fw-bold text-light font-mono mt-1">METEOR 350</div>
-                            <div class="badge bg-dark border border-secondary border-opacity-25 text-info font-mono mt-2 px-3 py-1 fs-7">
-                                ID: KL-01-AJ-2000
-                            </div>
-                        </div>
-
-                        <div class="spec-item"><span class="spec-label">Chassis VIN</span><span class="spec-value text-muted font-mono">ME3U3S5F3N21094</span></div>
-                        <div class="spec-item"><span class="spec-label">Displacement</span><span class="spec-value text-info">349cc J-Series Core</span></div>
-                        <div class="spec-item"><span class="spec-label">Cooling Draft</span><span class="spec-value text-light">Air-Oil Draft Core</span></div>
-                        <div class="spec-item"><span class="spec-label">Logic Engine</span><span class="spec-value text-primary">Fuzzy Engine v2.4</span></div>
-                        <div class="spec-item"><span class="spec-label">Safety Target</span><span class="spec-value text-warning">Anti-Burn Activated</span></div>
+    <div id="appShell" style="display: none;">
+        <nav class="smart-nav py-3 sticky-top">
+            <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="showView('fleetList')">
+                        <i class="bi bi-cpu-fill text-primary fs-4"></i>
+                        <span class="fw-bold fs-5 text-light">SmartFleet <span class="text-primary">AI</span></span>
                     </div>
-                    
-                    <div class="mt-3 pt-2 border-top border-secondary border-opacity-10 text-center text-muted fs-8">
-                        Predictive IoT Asset Health Monitoring Node
+                    <div class="d-none d-md-flex gap-2 ms-4 border-start border-secondary border-opacity-25 ps-4">
+                        <div class="nav-link-custom" onclick="showView('fleetList')"><i class="bi bi-grid-fill me-2"></i>Fleet Overview</div>
+                        <div class="nav-link-custom text-success" onclick="showView('regForm')"><i class="bi bi-plus-circle-fill me-2"></i>Add New Vehicle</div>
                     </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 font-mono">Scholar: Abhirami Ajith</span>
+                    <button class="btn btn-sm btn-outline-danger font-mono" onclick="handleLogout()">LOGOUT</button>
                 </div>
             </div>
+        </nav>
 
-            <div class="col-xl-8 col-lg-7 d-flex flex-column gap-4">
-                
-                <div class="row g-4">
-                    
-                    <div class="col-md-6">
-                        <div class="grid-card h-100 text-center">
-                            <div class="section-title justify-content-center">Real-Time Core Heat</div>
-                            <div id="tempContainer" class="metric-val text-success mt-2">
-                                <span id="tempVal">--</span><span class="unit">°C</span>
-                            </div>
-                            <div class="progress mt-3 mx-auto" style="height: 4px; width: 85%; background: #161f33;">
-                                <div id="tempBar" class="progress-bar bg-success" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="grid-card h-100 text-center">
-                            <div class="section-title justify-content-center">Velocity Draft Vector</div>
-                            <div class="metric-val text-primary mt-2"><span id="speedVal">--</span><span class="unit"> km/h</span></div>
-                            <div class="fs-7 mt-2 fw-medium" id="airflowTag">Airflow Draft Context</div>
-                        </div>
-                    </div>
-
+        <main class="container-fluid px-4 py-4">
+            
+            <section id="fleetList" class="view-section view-active">
+                <div class="d-flex justify-content-between align-items-end mb-4">
+                    <div><h4 class="fw-bold text-light mb-1">Active Fleet Registry</h4><p class="text-muted fs-7 mb-0">Select a vehicle to monitor Edge AI telemetry.</p></div>
                 </div>
+                <div id="fleetGrid" class="row g-4"></div>
+            </section>
 
-                <div class="grid-card brain-highlight flex-fill d-flex flex-column justify-content-center">
-                    <span class="brain-badge">AI Fuzzy Rulebase</span>
-                    <div class="row align-items-center g-3">
-                        
-                        <div class="col-md-7">
-                            <div class="section-title mb-1" style="color: #0088ff;">
-                                <i class="bi bi-diagram-3"></i> Real-Time Fuzzy Inference Logic
-                            </div>
-                            <div class="text-light fs-7">Evaluating combinatorial multi-sensor risk matrices:</div>
-                            <div class="logic-step font-mono text-light" id="logicRuleText">
-                                Synchronizing payload interfaces...
-                            </div>
-                        </div>
-
-                        <div class="col-md-5">
-                            <div id="statusPanelOuter" class="status-panel">
-                                <div>
-                                    <div class="fs-8 text-muted fw-bold">SAFETY INFERENCE</div>
-                                    <div id="statusText" class="fs-4 fw-bold text-success font-mono">STABLE</div>
-                                    <div class="fs-7 text-muted mt-1">Hazard Index: <strong id="riskVal" class="text-light">0%</strong></div>
-                                </div>
-                                <div class="beacon-wrapper">
-                                    <div id="emergencyBeacon" class="warning-beacon">
-                                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+            <section id="regForm" class="view-section">
+                <div class="row justify-content-center">
+                    <div class="col-xl-6 col-lg-8">
+                        <div class="grid-card">
+                            <h4 class="fw-bold text-light mb-1"><i class="bi bi-plus-circle text-success me-2"></i>Register New Asset</h4>
+                            <p class="text-muted fs-7 mb-4">Add a vehicle to the Local Storage DB with custom image upload.</p>
+                            
+                            <form onsubmit="handleRegister(event)">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="fs-8 text-muted fw-bold mb-1">VEHICLE ID (PLATE NO)</label>
+                                        <input type="text" id="vId" class="form-control font-mono" placeholder="e.g. KL-01-AJ-2000" required>
                                     </div>
-                                    <span class="fs-8 text-muted d-block mt-2 fw-bold text-center">WARNING LIGHT</span>
+                                    <div class="col-md-6">
+                                        <label class="fs-8 text-muted fw-bold mb-1">BRAND / MODEL NAME</label>
+                                        <input type="text" id="vBrand" class="form-control" placeholder="e.g. METEOR 350" required>
+                                    </div>
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="fs-8 text-muted fw-bold mb-1">VEHICLE CLASS</label>
+                                        <select id="vClass" class="form-select" required>
+                                            <option value="Cruiser">Cruiser Bike</option>
+                                            <option value="Adventure">Adventure Bike</option>
+                                            <option value="EV Sports">EV Sports Vehicle</option>
+                                            <option value="Heavy Truck">Heavy Commercial Truck</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fs-8 text-muted fw-bold mb-1">VIN / CHASSIS NUMBER</label>
+                                        <input type="text" id="vVin" class="form-control font-mono" placeholder="17-Digit String" required>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="fs-8 text-muted fw-bold mb-1">VEHICLE IMAGE UPLOAD</label>
+                                    <input type="file" id="vImgFile" class="form-control" accept=".jpg, .jpeg, .png, .webp" required>
+                                    <div class="fs-9 text-muted mt-1">Standard image formats only. Will be parsed locally via Base64.</div>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button type="button" class="btn btn-outline-secondary px-4" onclick="showView('fleetList')">Cancel</button>
+                                    <button type="submit" class="btn btn-primary-custom px-4">Commit to Database</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="telemetryView" class="view-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-sm btn-outline-secondary font-mono fs-8" onclick="showView('fleetList')">← BACK</button>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="spinner-grow spinner-grow-sm text-success" style="width: 8px; height: 8px;"></span>
+                        <span class="fs-7 text-success fw-medium font-mono">MQTT Edge Link Active</span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-xl-3 col-lg-4">
+                        <div class="grid-card h-100 text-center">
+                            <div id="brandLabel" class="fs-8 text-primary fw-bold text-uppercase mb-2">--</div>
+                            <div id="modelLabel" class="fs-4 fw-bold text-light font-mono">--</div>
+                            <div id="idLabel" class="badge bg-dark border border-secondary text-info font-mono mt-2 mb-3">ID: --</div>
+                            <hr class="border-secondary opacity-25">
+                            <div class="fs-8 text-muted">VIN: <span id="vinLabel" class="text-light">--</span></div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-9 col-lg-8">
+                        <div class="row g-3 h-100">
+                            <div class="col-md-4">
+                                <div class="grid-card h-100 d-flex align-items-center justify-content-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(239, 68, 68, 0.1);">
+                                        <i class="bi bi-thermometer-half fs-2 text-danger"></i>
+                                    </div>
+                                    <div class="text-start">
+                                        <div class="fs-8 text-muted fw-bold mb-1">CORE HEAT</div>
+                                        <div id="tempContainer" class="metric-val text-success" style="line-height: 1;"><span id="tempVal">--</span><span class="unit fs-6">°C</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="grid-card h-100 d-flex align-items-center justify-content-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(0, 136, 255, 0.1);">
+                                        <i class="bi bi-speedometer fs-2 text-primary"></i>
+                                    </div>
+                                    <div class="text-start">
+                                        <div class="fs-8 text-muted fw-bold mb-1">VELOCITY DRAFT</div>
+                                        <div class="metric-val text-primary" style="line-height: 1;"><span id="speedVal">--</span><span class="unit fs-6"> km/h</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="grid-card h-100 d-flex align-items-center justify-content-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(13, 202, 240, 0.1);">
+                                        <i class="bi bi-droplet-half fs-2 text-info"></i>
+                                    </div>
+                                    <div class="text-start">
+                                        <div class="fs-8 text-muted fw-bold mb-1">OIL PRESSURE</div>
+                                        <div id="oilContainer" class="metric-val text-info" style="line-height: 1;"><span id="oilVal">--</span><span class="unit fs-6"> PSI</span></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
-            </div>
-
-        </div>
-
-        <div class="row g-4 mb-4">
-            <div class="col-12">
-                <div class="grid-card">
-                    <div class="section-title justify-content-between">
-                        <span><i class="bi bi-geo-alt-fill text-danger"></i> Live AC Road Tracking GIS Spatial Interface</span>
-                        <span id="coordTag" class="text-muted font-mono text-lowercase" style="font-size: 0.75rem;">Vector Base Lock: Pending</span>
+                <div class="row g-3 mb-3">
+                    <div class="col-lg-7">
+                        <div class="grid-card h-100 d-flex align-items-center">
+                            <div class="row w-100 align-items-center">
+                                <div class="col-md-8 border-end border-secondary border-opacity-25 pe-4">
+                                    <div class="fs-8 text-primary fw-bold mb-3"><i class="bi bi-cpu-fill me-1"></i> PREDICTIVE AI ENGINE</div>
+                                    <div class="d-flex justify-content-between align-items-end" style="background: rgba(0,0,0,0.4); padding: 15px; border-left: 4px solid #0088ff; border-radius: 6px;">
+                                        <div>
+                                            <div class="fs-8 text-muted mb-1 text-uppercase">Logic: Trapezoidal [Temp, Speed, Oil]</div>
+                                            <div id="logicRuleText" class="text-light fs-7 font-mono">Awaiting stream...</div>
+                                        </div>
+                                        <div class="text-end ms-3">
+                                            <div class="fs-8 text-muted fw-bold mb-1">RISK SCORE</div>
+                                            <div id="riskScoreVal" class="metric-val text-secondary" style="font-size: 2.2rem; line-height: 1;">--<span class="unit fs-6">%</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-center ps-4">
+                                    <div class="fs-8 text-muted fw-bold mb-1">SAFETY STATUS</div>
+                                    <div id="statusText" class="fs-4 fw-bold text-success font-mono">STABLE</div>
+                                    <div id="emergencyBeacon" class="warning-beacon mt-2"><i class="bi bi-shield-check fs-5"></i></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="map"></div>
-                </div>
-            </div>
-        </div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-12">
-                <div class="grid-card">
-                    <div class="section-title">
-                        <i class="bi bi-graph-up text-primary"></i> Thermal Surge Analytics Timeline
-                    </div>
-                    <div style="height: 350px;">
-                        <canvas id="chartMatrix"></canvas>
+                    <div class="col-lg-5">
+                        <div class="grid-card h-100">
+                            <div class="fs-8 text-muted fw-bold mb-3">EXTENDED TELEMETRY</div>
+                            <div class="row g-2">
+                                <div class="col-6"><div class="sec-metric"><div class="sec-metric-label">Engine RPM</div><div class="sec-metric-val"><span id="rpmVal">--</span></div></div></div>
+                                <div class="col-6"><div class="sec-metric"><div class="sec-metric-label">Battery Power</div><div class="sec-metric-val"><span id="batVal">--</span> V</div></div></div>
+                                <div class="col-6"><div class="sec-metric"><div class="sec-metric-label">Fuel Level</div><div class="sec-metric-val"><span id="fuelVal">--</span> %</div></div></div>
+                                <div class="col-6"><div class="sec-metric"><div class="sec-metric-label">Chassis Vib</div><div class="sec-metric-val"><span id="vibVal">--</span> mm/s</div></div></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="row g-4">
-            <div class="col-12">
-                <div class="grid-card">
-                    <div class="section-title"><i class="bi bi-terminal-fill text-info"></i> Distributed Telemetry Stream Output</div>
-                    <div id="logStream" class="console-logs"></div>
+                <div class="row g-3">
+                    <div class="col-lg-6"><div class="grid-card"><div class="fs-8 text-muted fw-bold mb-3"><i class="bi bi-geo-alt-fill text-danger"></i> LIVE GPS</div><div id="map"></div></div></div>
+                    <div class="col-lg-6"><div class="grid-card"><div class="fs-8 text-muted fw-bold mb-3"><i class="bi bi-graph-up text-primary"></i> HEAT & OIL TRENDS</div><div style="height: 350px;"><canvas id="chartMatrix"></canvas></div></div></div>
                 </div>
-            </div>
-        </div>
-
-    </main>
+            </section>
+        </main>
+    </div>
 
     <script>
-        // 1. Initializing Leaflet Mapping base matrix framed around AC Road (Changanassery to Alappuzha Corridor)
-        const initialMapCenter = [9.4500, 76.4400]; // Anchored centrally along AC Highway corridor
-        const map = L.map('map').setView(initialMapCenter, 12); // Optimized scale displays complete cross-district highway path
-        
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png', {
-            attribution: '&copy; Abhirami Core GIS Platform', maxZoom: 19
-        }).addTo(map);
+        const DEFAULT_FLEET = [];
 
-        const customMarker = L.divIcon({
-            className: 'custom-icon',
-            html: `<div style="background:#0088ff; width:16px; height:16px; border-radius:50%; border:3px solid #04060d; box-shadow: 0 0 15px #0088ff;"></div>`,
-            iconSize: [16, 16], iconAnchor: [8, 8]
-        });
-        const marker = L.marker([9.4450, 76.5400], {icon: customMarker}).addTo(map);
+        let fleet = JSON.parse(localStorage.getItem('fleetData'));
+        if (!fleet || fleet.length === 0) {
+            fleet = DEFAULT_FLEET;
+            localStorage.setItem('fleetData', JSON.stringify(fleet));
+        }
 
-        // 2. Establishing Chart.js context execution buffers
-        const ctx = document.getElementById('chartMatrix').getContext('2d');
-        const analyticsChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [], borderColor: '#0088ff', borderWidth: 3, pointRadius: 4,
-                    pointBackgroundColor: '#0088ff', pointBorderColor: '#ffffff', tension: 0.3, fill: true,
-                    backgroundColor: 'rgba(0, 136, 255, 0.08)'
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-                    y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', font: { size: 10 } }, suggestedMin: 60, suggestedMax: 125 }
-                }
+        let activeAssetId = null;
+        const fleetCache = {}; const markersCache = {};
+        let map, analyticsChart, client, isSystemInit = false;
+
+        function checkSession() {
+            if(sessionStorage.getItem('auth') === 'true') {
+                document.getElementById('authView').style.display = 'none'; document.getElementById('appShell').style.display = 'block';
+                showView('fleetList'); if(!isSystemInit) initIoTSystem();
+            } else {
+                document.getElementById('appShell').style.display = 'none'; document.getElementById('authView').style.display = 'flex';
             }
-        });
+        }
+        function handleLogin(e) { e.preventDefault(); if(document.getElementById('username').value==='admin' && document.getElementById('password').value==='admin123'){ sessionStorage.setItem('auth', 'true'); checkSession(); } }
+        function handleLogout() { sessionStorage.removeItem('auth'); checkSession(); }
+        
+        function showView(viewId) {
+            document.querySelectorAll('main .view-section').forEach(v => v.classList.remove('view-active'));
+            document.getElementById(viewId).classList.add('view-active');
+            if(viewId === 'fleetList') renderFleet();
+            if(viewId === 'telemetryView' && map) setTimeout(() => map.invalidateSize(), 200);
+        }
 
-        // 3. Broker MQTT Connection Management Pipeline
-        const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
-        const TOPIC = "fleet/telemetry/pro";
+        function renderFleet() {
+            document.getElementById('fleetGrid').innerHTML = fleet.map(v => {
+                let badge = '<span class="badge bg-secondary bg-opacity-25 text-muted">OFFLINE</span>';
+                if(fleetCache[v.id]) badge = fleetCache[v.id].engine_status === 'CRITICAL' ? '<span class="badge bg-danger bg-opacity-25 text-danger">CRITICAL</span>' : '<span class="badge bg-success bg-opacity-25 text-success">STABLE</span>';
+                return `
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="vehicle-card">
+                        <div class="card-img-wrapper">
+                            <img src="${v.img}" onclick="launchTelemetry('${v.id}')">
+                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" onclick="deleteVehicle('${v.id}')" title="Remove Vehicle" style="z-index: 10; border-radius: 5px;">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </div>
+                        <div class="p-3" onclick="launchTelemetry('${v.id}')" style="cursor:pointer;">
+                            <div class="d-flex justify-content-between mb-2"><span class="fs-8 fw-bold text-primary">${v.class}</span>${badge}</div>
+                            <h5 class="fw-bold mb-1">${v.brand}</h5>
+                            <p class="font-mono text-muted fs-7 mb-3">${v.id}</p>
+                            <button class="btn btn-outline-primary w-100 font-mono">MONITOR</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
-        client.on('connect', () => {
-            console.log("MQTT Gateway Socket Linked Securely");
-            client.subscribe(TOPIC);
-            document.getElementById('logStream').innerHTML = '<div class="text-muted text-center pt-5">Awaiting edge engine telemetric data streams from hardware node...</div>';
-        });
+        function deleteVehicle(id) {
+            if(confirm(`Are you sure you want to remove vehicle ID: ${id}?`)) {
+                fleet = fleet.filter(v => v.id !== id);
+                localStorage.setItem('fleetData', JSON.stringify(fleet));
+                renderFleet();
+            }
+        }
 
-        let clearTerminalBuffer = true;
+        function handleRegister(e) {
+            e.preventDefault();
+            const file = document.getElementById('vImgFile').files[0];
+            if (!file) return;
 
-        client.on('message', (topic, payload) => {
-            try {
-                const packet = JSON.parse(payload.toString());
-                const exactTime = new Date().toLocaleTimeString();
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const img = new Image();
+                
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600; 
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
 
-                if(clearTerminalBuffer) { document.getElementById('logStream').innerHTML = ''; clearTerminalBuffer = false; }
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                // Inject scalar values natively
-                document.getElementById('tempVal').innerText = packet.temp;
-                document.getElementById('speedVal').innerText = packet.speed;
-                document.getElementById('riskVal').innerText = `${packet.risk_score}%`;
-                document.getElementById('coordTag').innerText = `Vector Path Coordinate Lock: ${packet.lat}, ${packet.lon}`;
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
-                // Calculate UI linear meter bounds parameters dynamically
-                const pct = Math.min(Math.max(((packet.temp - 60) / (125 - 60)) * 100, 0), 100);
-                document.getElementById('tempBar').style.width = `${pct}%`;
+                    const newAsset = {
+                        id: document.getElementById('vId').value.trim(),
+                        brand: document.getElementById('vBrand').value.trim(),
+                        class: document.getElementById('vClass').value,
+                        vin: document.getElementById('vVin').value.trim(),
+                        img: compressedBase64
+                    };
 
-                // Update Velocity Airflow Context factors
-                const draftElem = document.getElementById('airflowTag');
-                if(packet.speed < 15) {
-                    draftElem.innerHTML = `<span class="text-warning">Stagnant Engine Airflow Velocity (Thermal Hazard)</span>`;
-                } else {
-                    draftElem.innerHTML = `<span class="text-success">Optimal Wind Velocity Dispersal Active</span>`;
+                    try {
+                        fleet.push(newAsset);
+                        localStorage.setItem('fleetData', JSON.stringify(fleet));
+                        
+                        document.getElementById('vId').value = '';
+                        document.getElementById('vBrand').value = '';
+                        document.getElementById('vVin').value = '';
+                        document.getElementById('vImgFile').value = '';
+                        
+                        showView('fleetList');
+                    } catch (error) {
+                        alert("Storage Error: LocalStorage is full. Please delete some vehicles first.");
+                    }
+                };
+
+                img.onerror = function() {
+                    alert("⚠️ Error: Unsupported image format! Browser cannot process HEIC or broken files. Please use standard JPG or PNG.");
+                };
+
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function launchTelemetry(id) {
+            activeAssetId = id; const meta = fleet.find(x => x.id === id);
+            document.getElementById('brandLabel').innerText = meta.class; document.getElementById('modelLabel').innerText = meta.brand;
+            document.getElementById('idLabel').innerText = `ID: ${meta.id}`; document.getElementById('vinLabel').innerText = meta.vin;
+            
+            document.getElementById('riskScoreVal').innerHTML = `--<span class="unit fs-6">%</span>`;
+            document.getElementById('riskScoreVal').className = "metric-val text-secondary";
+            
+            if(analyticsChart) { analyticsChart.data.labels=[]; analyticsChart.data.datasets[0].data=[]; analyticsChart.data.datasets[1].data=[]; analyticsChart.update(); }
+            showView('telemetryView');
+        }
+
+        function initIoTSystem() {
+            if(isSystemInit) return;
+            map = L.map('map').setView([9.4500, 76.4400], 12);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png').addTo(map);
+
+            const ctx = document.getElementById('chartMatrix').getContext('2d');
+            analyticsChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [
+                    { label: 'Heat (°C)', data: [], borderColor: '#0088ff', backgroundColor: 'rgba(0, 136, 255, 0.1)', fill: true, tension: 0.4 },
+                    { label: 'Oil (PSI)', data: [], borderColor: '#10b981', borderDash: [5, 5], tension: 0.4 }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: {color: '#94a3b8'} } }, scales: { x: { display: false }, y: { grid: {color: 'rgba(255,255,255,0.05)'} } } }
+            });
+
+            client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+            client.on('connect', () => client.subscribe("fleet/telemetry/pro"));
+            client.on('message', (topic, payload) => {
+                const p = JSON.parse(payload.toString()); fleetCache[p.vehicle_id] = p;
+                if(p.lat) {
+                    if(!markersCache[p.vehicle_id]) markersCache[p.vehicle_id] = L.marker([p.lat, p.lon], {icon: L.divIcon({className: 'custom-icon', html: `<div style="background:#0088ff; width:12px; height:12px; border-radius:50%; border:2px solid #04060d;"></div>`})}).addTo(map);
+                    else markersCache[p.vehicle_id].setLatLng([p.lat, p.lon]);
                 }
+                if(p.vehicle_id === activeAssetId && document.getElementById('telemetryView').classList.contains('view-active')) updateUI(p);
+                if(document.getElementById('fleetList').classList.contains('view-active')) renderFleet();
+            });
+            isSystemInit = true;
+        }
 
-                // --- STATE INTERCEPTION ENGINE: TOGGLES BEACON & TARGETS DYNAMIC TEXT COLORING ---
-                const tempTextContainer = document.getElementById('tempContainer');
-                const tempBarElement = document.getElementById('tempBar');
-                const outerPanel = document.getElementById('statusPanelOuter');
-                const statusStr = document.getElementById('statusText');
-                const lightBeacon = document.getElementById('emergencyBeacon');
-                const logicExplanation = document.getElementById('logicRuleText');
+        function updateUI(p) {
+            document.getElementById('tempVal').innerText = p.temp;
+            document.getElementById('speedVal').innerText = p.speed;
+            document.getElementById('oilVal').innerText = p.oil_pressure;
+            document.getElementById('rpmVal').innerText = p.rpm;
+            document.getElementById('batVal').innerText = p.battery;
+            document.getElementById('fuelVal').innerText = p.fuel;
+            document.getElementById('vibVal').innerText = p.vibration;
 
-                if(packet.engine_status === "CRITICAL") {
-                    // Activate Critical Hazard Profiles & Instantly triggers Red styling matrix
-                    tempTextContainer.className = "metric-val text-danger mt-2"; // Forces explicit Red Text
-                    tempBarElement.className = "progress-bar bg-danger"; // Colors dynamic indicator element Red
-                    
-                    outerPanel.className = "status-panel panel-critical";
-                    statusStr.className = "fs-4 fw-bold text-danger font-mono";
-                    statusStr.innerText = "CRITICAL";
-                    lightBeacon.className = "warning-beacon beacon-critical"; 
-                    
-                    logicExplanation.innerHTML = `[HAZARD ASSERTED] <span class="text-danger fw-bold">Surge Core Temp</span> combined with <span class="text-warning fw-bold">Zero Airflow Draft</span> triggers maximal Anti-Burn hazard index score.`;
-                } else {
-                    // Re-assert Stable Cruising operating configurations using native Green styling paths
-                    tempTextContainer.className = "metric-val text-success mt-2"; // Restores absolute Green Text
-                    tempBarElement.className = "progress-bar bg-success"; // Restores Green status array Indicator
-                    
-                    outerPanel.className = "status-panel";
-                    statusStr.className = "fs-4 fw-bold text-success font-mono";
-                    statusStr.innerText = "STABLE";
-                    lightBeacon.className = "warning-beacon"; 
-                    
-                    logicExplanation.innerHTML = `Operating Parameters Normal. Cruising Velocity Draft vector clearing excessive internal core heat buildup.`;
-                }
+            document.getElementById('tempContainer').className = p.temp > 105 ? "metric-val text-danger" : "metric-val text-success";
+            document.getElementById('oilContainer').className = p.oil_pressure < 30 ? "metric-val text-danger" : "metric-val text-info";
 
-                // Synchronize dynamic ground map layers smoothly
-                if(packet.lat && packet.lon) {
-                    const actualCoords = [packet.lat, packet.lon];
-                    marker.setLatLng(actualCoords);
-                    map.panTo(actualCoords);
-                }
+            document.getElementById('riskScoreVal').innerHTML = `${p.risk_score}<span class="unit fs-6">%</span>`;
+            let riskColor = p.risk_score >= 75 ? "text-danger" : (p.risk_score >= 45 ? "text-warning" : "text-success");
+            document.getElementById('riskScoreVal').className = `metric-val ${riskColor}`;
 
-                // Step graph matrix points cleanly
-                analyticsChart.data.labels.push(exactTime);
-                analyticsChart.data.datasets[0].data.push(packet.temp);
-                if(analyticsChart.data.labels.length > 12) {
-                    analyticsChart.data.labels.shift();
-                    analyticsChart.data.datasets[0].data.shift();
-                }
-                analyticsChart.update('none');
+            if(p.engine_status === "CRITICAL" || p.engine_status === "WARNING") {
+                let statusColor = p.engine_status === "CRITICAL" ? "danger" : "warning";
+                document.getElementById('statusText').className = `fs-4 fw-bold text-${statusColor} font-mono`;
+                document.getElementById('statusText').innerText = p.engine_status;
+                document.getElementById('emergencyBeacon').className = p.engine_status === "CRITICAL" ? "warning-beacon beacon-critical" : "warning-beacon";
+                document.getElementById('emergencyBeacon').innerHTML = `<i class="bi bi-exclamation-triangle-fill fs-5"></i>`;
+                document.getElementById('logicRuleText').innerHTML = `<span class="text-${statusColor}">Hazard pattern detected. Preventive action required.</span>`;
+            } else {
+                document.getElementById('statusText').className = "fs-4 fw-bold text-success font-mono";
+                document.getElementById('statusText').innerText = "STABLE";
+                document.getElementById('emergencyBeacon').className = "warning-beacon";
+                document.getElementById('emergencyBeacon').innerHTML = `<i class="bi bi-shield-check text-success fs-5"></i>`;
+                document.getElementById('logicRuleText').innerHTML = `Parameters within safe limits. Optimal operation.`;
+            }
 
-                // Stream Terminal Event output array data logs
-                const logTarget = document.getElementById('logStream');
-                const badgeColor = packet.engine_status === "CRITICAL" ? 'color:#ff0000;font-weight:bold;' : 'color:#00ff88;';
-                const logLine = `<div><span style="color:#64748b">[${exactTime}]</span> [TELEMETRY INGESTION] T: ${packet.temp}°C | Speed: ${packet.speed} km/h | Target Lock: <span style="${badgeColor}">${packet.engine_status}</span></div>`;
-                logTarget.innerHTML = logLine + logTarget.innerHTML;
+            if(p.lat) map.panTo([p.lat, p.lon]);
 
-            } catch(e) { console.error("Telemetry extraction parsing fault:", e); }
-        });
+            analyticsChart.data.labels.push(new Date().toLocaleTimeString());
+            analyticsChart.data.datasets[0].data.push(p.temp);
+            analyticsChart.data.datasets[1].data.push(p.oil_pressure);
+            if(analyticsChart.data.labels.length > 15) { analyticsChart.data.labels.shift(); analyticsChart.data.datasets[0].data.shift(); analyticsChart.data.datasets[1].data.shift(); }
+            analyticsChart.update('none');
+        }
 
-        client.on('error', () => { document.getElementById('coordTag').innerText = "Gateway Connection Interrupt"; });
+        window.onload = checkSession;
     </script>
 </body>
 </html>
