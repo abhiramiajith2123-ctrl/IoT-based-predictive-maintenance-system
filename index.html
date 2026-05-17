@@ -18,16 +18,20 @@
         :root { --bg-base: #04060d; --surface-card: #0a1020; --border-color: rgba(255, 255, 255, 0.08); --text-muted: #94a3b8; --accent-blue: #0088ff; --font-main: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace; }
         body { background-color: var(--bg-base); color: #f1f5f9; font-family: var(--font-main); margin: 0; overflow-x: hidden; }
 
-        #authView { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: linear-gradient(rgba(4, 6, 13, 0.75), rgba(4, 6, 13, 0.95)), url('https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&q=80&w=1920') center/cover no-repeat; }
+        /* ULTRA STABLE ENGINE BACKGROUND LINK */
+        #authView { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: linear-gradient(rgba(4, 6, 13, 0.85), rgba(4, 6, 13, 0.98)), url('https://images.pexels.com/photos/190539/pexels-photo-190539.jpeg?auto=compress&cs=tinysrgb&w=1920') center/cover no-repeat; }
+        
         .auth-card { width: 100%; max-width: 420px; background: rgba(10, 16, 32, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 25px 50px rgba(0,0,0,0.8); text-align: center; }
         .auth-card .logo-icon { font-size: 3.5rem; color: var(--accent-blue); margin-bottom: 0.5rem; filter: drop-shadow(0 0 10px rgba(0, 136, 255, 0.5)); }
         .smart-nav { background: rgba(4, 6, 13, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid var(--border-color); z-index: 1050; }
         .nav-link-custom { color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; padding: 0.5rem 1rem; border-radius: 8px; }
         .nav-link-custom:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .vehicle-card { background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        
+        .vehicle-card { background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; height: 100%; }
         .vehicle-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); box-shadow: 0 15px 30px rgba(0, 136, 255, 0.15); transition: 0.3s ease; }
-        .card-img-wrapper { height: 160px; background: #000; position: relative; border-bottom: 1px solid var(--border-color); }
+        .card-img-wrapper { height: 160px; background: #000; position: relative; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         .card-img-wrapper img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; cursor: pointer; }
+        
         .form-control, .form-select { background: #05070f !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important; border-radius: 8px; padding: 0.75rem 1rem; }
         .form-control:focus, .form-select:focus { border-color: var(--accent-blue) !important; box-shadow: 0 0 10px rgba(0,136,255,0.2); }
         .btn-primary-custom { background: var(--accent-blue); color: white; font-weight: 600; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; }
@@ -44,6 +48,9 @@
         .sec-metric { background: #05070f; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; text-align: center; }
         .sec-metric-val { font-family: var(--font-mono); font-size: 1.2rem; font-weight: bold; color: #e2e8f0; }
         .sec-metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        
+        /* Marker Styling */
+        .custom-icon { background: transparent; border: none; }
     </style>
 </head>
 <body>
@@ -94,7 +101,7 @@
                 <div class="row justify-content-center">
                     <div class="col-xl-6 col-lg-8">
                         <div class="grid-card">
-                            <h4 class="fw-bold text-light mb-1"><i class="bi bi-plus-circle text-success me-2"></i>Register New Asset</h4>
+                            <h4 class="fw-bold text-light mb-1"><i class="bi bi-plus-circle text-success me-2"></i>Register New Vehicle</h4>
                             <p class="text-muted fs-7 mb-4">Add a vehicle to the Local Storage DB with custom image upload.</p>
                             
                             <form onsubmit="handleRegister(event)">
@@ -110,12 +117,13 @@
                                 </div>
                                 <div class="row g-3 mb-3">
                                     <div class="col-md-6">
-                                        <label class="fs-8 text-muted fw-bold mb-1">VEHICLE CLASS</label>
+                                        <label class="fs-8 text-muted fw-bold mb-1">VEHICLE CATEGORY</label>
                                         <select id="vClass" class="form-select" required>
-                                            <option value="Cruiser">Cruiser Bike</option>
-                                            <option value="Adventure">Adventure Bike</option>
-                                            <option value="EV Sports">EV Sports Vehicle</option>
-                                            <option value="Heavy Truck">Heavy Commercial Truck</option>
+                                            <option value="" disabled selected>Select Category...</option>
+                                            <option value="Two-Wheeler (Motorcycle/Scooter)">Two-Wheeler (Motorcycle/Scooter)</option>
+                                            <option value="Light Motor Vehicle (Car/SUV)">Light Motor Vehicle (Car/SUV)</option>
+                                            <option value="Heavy Commercial (Truck/Bus)">Heavy Commercial (Truck/Bus)</option>
+                                            <option value="Three-Wheeler (Auto/Goods)">Three-Wheeler (Auto/Goods)</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
@@ -245,7 +253,16 @@
     </div>
 
     <script>
-        const DEFAULT_FLEET = [];
+        // ULTRA STABLE DEFAULT FLEET LINKS
+        const DEFAULT_FLEET = [
+            { 
+                id: "KL-01-AJ-2000", 
+                brand: "METEOR 350", 
+                class: "Two-Wheeler (Motorcycle/Scooter)", 
+                vin: "ME3U3S5F3N21094", 
+                img: "https://cdn.bikedekho.com/processedimages/royal-enfield/meteor-350/source/meteor-35068e793240521c.jpg" 
+            }
+        ];
 
         let fleet = JSON.parse(localStorage.getItem('fleetData'));
         if (!fleet || fleet.length === 0) {
@@ -277,22 +294,28 @@
 
         function renderFleet() {
             document.getElementById('fleetGrid').innerHTML = fleet.map(v => {
-                let badge = '<span class="badge bg-secondary bg-opacity-25 text-muted">OFFLINE</span>';
-                if(fleetCache[v.id]) badge = fleetCache[v.id].engine_status === 'CRITICAL' ? '<span class="badge bg-danger bg-opacity-25 text-danger">CRITICAL</span>' : '<span class="badge bg-success bg-opacity-25 text-success">STABLE</span>';
+                let badge = '<span class="badge bg-secondary bg-opacity-25 text-muted" style="white-space: nowrap;">OFFLINE</span>';
+                if(fleetCache[v.id]) badge = fleetCache[v.id].engine_status === 'CRITICAL' ? '<span class="badge bg-danger bg-opacity-25 text-danger" style="white-space: nowrap;">CRITICAL</span>' : '<span class="badge bg-success bg-opacity-25 text-success" style="white-space: nowrap;">STABLE</span>';
+                
                 return `
-                <div class="col-xl-3 col-lg-4 col-md-6">
-                    <div class="vehicle-card">
+                <div class="col-xl-3 col-lg-4 col-md-6 d-flex align-items-stretch">
+                    <div class="vehicle-card w-100">
                         <div class="card-img-wrapper">
                             <img src="${v.img}" onclick="launchTelemetry('${v.id}')">
                             <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" onclick="deleteVehicle('${v.id}')" title="Remove Vehicle" style="z-index: 10; border-radius: 5px;">
                                 <i class="bi bi-trash3-fill"></i>
                             </button>
                         </div>
-                        <div class="p-3" onclick="launchTelemetry('${v.id}')" style="cursor:pointer;">
-                            <div class="d-flex justify-content-between mb-2"><span class="fs-8 fw-bold text-primary">${v.class}</span>${badge}</div>
-                            <h5 class="fw-bold mb-1">${v.brand}</h5>
+                        <div class="p-3 d-flex flex-column" style="cursor:pointer; flex: 1;" onclick="launchTelemetry('${v.id}')">
+                            <div class="d-flex justify-content-between align-items-start mb-2" style="min-height: 38px;">
+                                <span class="fs-8 fw-bold text-primary pe-2">${v.class}</span>
+                                ${badge}
+                            </div>
+                            <h5 class="fw-bold mb-1 text-truncate">${v.brand}</h5>
                             <p class="font-mono text-muted fs-7 mb-3">${v.id}</p>
-                            <button class="btn btn-outline-primary w-100 font-mono">MONITOR</button>
+                            <div class="mt-auto">
+                                <button class="btn btn-outline-primary w-100 font-mono">MONITOR</button>
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -343,6 +366,7 @@
                         document.getElementById('vId').value = '';
                         document.getElementById('vBrand').value = '';
                         document.getElementById('vVin').value = '';
+                        document.getElementById('vClass').value = '';
                         document.getElementById('vImgFile').value = '';
                         
                         showView('fleetList');
@@ -389,12 +413,25 @@
 
             client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
             client.on('connect', () => client.subscribe("fleet/telemetry/pro"));
+            
             client.on('message', (topic, payload) => {
                 const p = JSON.parse(payload.toString()); fleetCache[p.vehicle_id] = p;
+                
                 if(p.lat) {
-                    if(!markersCache[p.vehicle_id]) markersCache[p.vehicle_id] = L.marker([p.lat, p.lon], {icon: L.divIcon({className: 'custom-icon', html: `<div style="background:#0088ff; width:12px; height:12px; border-radius:50%; border:2px solid #04060d;"></div>`})}).addTo(map);
-                    else markersCache[p.vehicle_id].setLatLng([p.lat, p.lon]);
+                    let isActiveVehicle = (p.vehicle_id === activeAssetId && document.getElementById('telemetryView').classList.contains('view-active'));
+                    
+                    let iconHtml = isActiveVehicle 
+                        ? `<div style="background:#10b981; width:18px; height:18px; border-radius:50%; border:3px solid #fff; box-shadow: 0 0 15px #10b981;"></div>` 
+                        : `<div style="background:#334155; width:8px; height:8px; border-radius:50%; border:1px solid #04060d;"></div>`;
+
+                    if(!markersCache[p.vehicle_id]) {
+                        markersCache[p.vehicle_id] = L.marker([p.lat, p.lon], {icon: L.divIcon({className: 'custom-icon', html: iconHtml})}).addTo(map);
+                    } else {
+                        markersCache[p.vehicle_id].setLatLng([p.lat, p.lon]);
+                        markersCache[p.vehicle_id].setIcon(L.divIcon({className: 'custom-icon', html: iconHtml}));
+                    }
                 }
+                
                 if(p.vehicle_id === activeAssetId && document.getElementById('telemetryView').classList.contains('view-active')) updateUI(p);
                 if(document.getElementById('fleetList').classList.contains('view-active')) renderFleet();
             });
