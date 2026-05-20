@@ -18,7 +18,6 @@
         :root { --bg-base: #04060d; --surface-card: #0a1020; --border-color: rgba(255, 255, 255, 0.08); --text-muted: #94a3b8; --accent-blue: #0088ff; --font-main: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace; }
         body { background-color: var(--bg-base); color: #f1f5f9; font-family: var(--font-main); margin: 0; overflow-x: hidden; }
 
-        /* ULTRA STABLE ENGINE BACKGROUND LINK */
         #authView { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; background: linear-gradient(rgba(4, 6, 13, 0.85), rgba(4, 6, 13, 0.98)), url('https://images.pexels.com/photos/190539/pexels-photo-190539.jpeg?auto=compress&cs=tinysrgb&w=1920') center/cover no-repeat; }
         
         .auth-card { width: 100%; max-width: 420px; background: rgba(10, 16, 32, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 2.5rem; box-shadow: 0 25px 50px rgba(0,0,0,0.8); text-align: center; }
@@ -49,7 +48,6 @@
         .sec-metric-val { font-family: var(--font-mono); font-size: 1.2rem; font-weight: bold; color: #e2e8f0; }
         .sec-metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
         
-        /* Marker Styling */
         .custom-icon { background: transparent; border: none; }
     </style>
 </head>
@@ -253,14 +251,13 @@
     </div>
 
     <script>
-        // ULTRA STABLE DEFAULT FLEET LINKS
         const DEFAULT_FLEET = [
             { 
                 id: "KL-01-AJ-2000", 
                 brand: "METEOR 350", 
                 class: "Two-Wheeler (Motorcycle/Scooter)", 
                 vin: "ME3U3S5F3N21094", 
-                img: "https://cdn.bikedekho.com/processedimages/royal-enfield/meteor-350/source/meteor-35068e793240521c.jpg" 
+                img: "https://images.pexels.com/photos/2116475/pexels-photo-2116475.jpeg?auto=compress&cs=tinysrgb&w=600" 
             }
         ];
 
@@ -271,6 +268,7 @@
         }
 
         let activeAssetId = null;
+        let criticalCounter = 0; // State Tracker for Debounce Logic
         const fleetCache = {}; const markersCache = {};
         let map, analyticsChart, client, isSystemInit = false;
 
@@ -295,7 +293,9 @@
         function renderFleet() {
             document.getElementById('fleetGrid').innerHTML = fleet.map(v => {
                 let badge = '<span class="badge bg-secondary bg-opacity-25 text-muted" style="white-space: nowrap;">OFFLINE</span>';
-                if(fleetCache[v.id]) badge = fleetCache[v.id].engine_status === 'CRITICAL' ? '<span class="badge bg-danger bg-opacity-25 text-danger" style="white-space: nowrap;">CRITICAL</span>' : '<span class="badge bg-success bg-opacity-25 text-success" style="white-space: nowrap;">STABLE</span>';
+                if(fleetCache[v.id]) {
+                    badge = fleetCache[v.id].engine_status === 'CRITICAL' ? '<span class="badge bg-danger bg-opacity-25 text-danger" style="white-space: nowrap;">CRITICAL</span>' : '<span class="badge bg-success bg-opacity-25 text-success" style="white-space: nowrap;">STABLE</span>';
+                }
                 
                 return `
                 <div class="col-xl-3 col-lg-4 col-md-6 d-flex align-items-stretch">
@@ -385,7 +385,9 @@
         }
 
         function launchTelemetry(id) {
-            activeAssetId = id; const meta = fleet.find(x => x.id === id);
+            activeAssetId = id; 
+            criticalCounter = 0; // Reset counter when switching vehicles
+            const meta = fleet.find(x => x.id === id);
             document.getElementById('brandLabel').innerText = meta.class; document.getElementById('modelLabel').innerText = meta.brand;
             document.getElementById('idLabel').innerText = `ID: ${meta.id}`; document.getElementById('vinLabel').innerText = meta.vin;
             
@@ -454,14 +456,36 @@
             let riskColor = p.risk_score >= 75 ? "text-danger" : (p.risk_score >= 45 ? "text-warning" : "text-success");
             document.getElementById('riskScoreVal').className = `metric-val ${riskColor}`;
 
-            if(p.engine_status === "CRITICAL" || p.engine_status === "WARNING") {
-                let statusColor = p.engine_status === "CRITICAL" ? "danger" : "warning";
-                document.getElementById('statusText').className = `fs-4 fw-bold text-${statusColor} font-mono`;
-                document.getElementById('statusText').innerText = p.engine_status;
-                document.getElementById('emergencyBeacon').className = p.engine_status === "CRITICAL" ? "warning-beacon beacon-critical" : "warning-beacon";
-                document.getElementById('emergencyBeacon').innerHTML = `<i class="bi bi-exclamation-triangle-fill fs-5"></i>`;
-                document.getElementById('logicRuleText').innerHTML = `<span class="text-${statusColor}">Hazard pattern detected. Preventive action required.</span>`;
+            // 🚀 NEW HIGH-SENSITIVITY STATE TRANSITION LOGIC
+            if (p.engine_status === "CRITICAL" || p.risk_score >= 75) {
+                criticalCounter += 2; // Jump up extremely fast on danger
+            } else if (p.engine_status === "WARNING" || (p.risk_score >= 45 && p.risk_score < 75)) {
+                criticalCounter += 1; // Step up on warning
             } else {
+                criticalCounter -= 1; // Cool down slowly (fixes the instant reset bug)
+            }
+
+            // Keep counter within logical bounds
+            if (criticalCounter > 4) criticalCounter = 4;
+            if (criticalCounter < 0) criticalCounter = 0;
+
+            // Trigger UI based on new high-speed counter
+            if (criticalCounter >= 3) {
+                // State 3: CRITICAL 
+                document.getElementById('statusText').className = "fs-4 fw-bold text-danger font-mono";
+                document.getElementById('statusText').innerText = "CRITICAL";
+                document.getElementById('emergencyBeacon').className = "warning-beacon beacon-critical";
+                document.getElementById('emergencyBeacon').innerHTML = `<i class="bi bi-exclamation-triangle-fill fs-5"></i>`;
+                document.getElementById('logicRuleText').innerHTML = `<span class="text-danger">Sustained Critical Pattern. Engine failure imminent.</span>`;
+            } else if (criticalCounter > 0) {
+                // State 2: WARNING
+                document.getElementById('statusText').className = "fs-4 fw-bold text-warning font-mono";
+                document.getElementById('statusText').innerText = "WARNING";
+                document.getElementById('emergencyBeacon').className = "warning-beacon";
+                document.getElementById('emergencyBeacon').innerHTML = `<i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>`;
+                document.getElementById('logicRuleText').innerHTML = `<span class="text-warning">Anomalous pattern detected. System verifying hazard...</span>`;
+            } else {
+                // State 1: STABLE
                 document.getElementById('statusText').className = "fs-4 fw-bold text-success font-mono";
                 document.getElementById('statusText').innerText = "STABLE";
                 document.getElementById('emergencyBeacon').className = "warning-beacon";
